@@ -1,0 +1,21 @@
+.Header {
+    display: flex;
+    padding: 10px 20px;
+    background: #000;
+    position: static;
+
+    &__menu {
+        margin-left: auto;
+    }
+
+    &__navList {
+        display: flex;
+        column-gap: 20px;
+        list-style-type: none;
+    }
+
+    &__link {
+        text-decoration: none;
+        color: #fff;
+    }
+}

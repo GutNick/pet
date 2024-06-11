@@ -1,0 +1,9 @@
+.NavLink {
+  text-decoration: none;
+  color: #fff;
+
+  &--isActive {
+    border-bottom: 2px solid #fff;
+    pointer-events: none;
+  }
+}
