@@ -10,7 +10,7 @@ export const HeaderNav = ({getCN}: HeaderNavProps) => {
     <nav className={getCN("menu")}>
       <ul className={getCN("navList")}>
         {NAV_LINKS.map(({title, url}) => (
-          <li><NavLink url={url}>{title}</NavLink></li>
+          <li key={url}><NavLink url={url}>{title}</NavLink></li>
         ))}
       </ul>
     </nav>
