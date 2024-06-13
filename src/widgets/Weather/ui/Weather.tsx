@@ -45,7 +45,7 @@ export const Weather = () => {
   useEffect(() => {
     if (coordinates) {
       setIsLoading(true)
-      fetchWeather({pastDays: 1, ...coordinates})
+      fetchWeather({...coordinates})
         .then(data => {
           setData(data)
           setDates(() => ([...data.hourly.time.map(date => moment(date).format("DD.MM HH:mm"))]))
