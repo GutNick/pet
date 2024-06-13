@@ -1,8 +1,8 @@
 'use client'
 import {Line} from 'react-chartjs-2';
-import {CategoryScale, Chart, LinearScale, PointElement, LineElement, Legend, Tooltip} from "chart.js";
+import {CategoryScale, Chart, LinearScale, PointElement, LineElement, Tooltip} from "chart.js";
 import {getCurrentPosition} from "@/widgets/Weather/lib";
-import {useEffect, useRef, useState} from "react";
+import {useEffect, useState} from "react";
 import {fetchWeather} from "@/widgets/Weather/api";
 import moment from "moment";
 

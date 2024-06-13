@@ -1,4 +1,3 @@
-import Link from "next/link";
 import {useCN} from "@/shared/utils/hooks/useCN";
 import "./styles.scss"
 import {HeaderNav} from "@/widgets/Header/ui/HeaderNav";
