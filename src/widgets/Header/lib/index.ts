@@ -6,5 +6,9 @@ export const NAV_LINKS = [
   {
     title: "About",
     url: "/about"
+  },
+  {
+    title: "Weather",
+    url: "/weather"
   }
 ]
