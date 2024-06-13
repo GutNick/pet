@@ -7,13 +7,19 @@ import {fetchWeather} from "@/widgets/Weather/api";
 import moment from "moment";
 
 export type locationCoords = { latitude: number | undefined; longitude: number | undefined } | null;
+interface IData {
+  hourly: {
+    time: Date[],
+    temperature_2m: number[]
+  }
+}
 
 Chart.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip);
 
 export const Weather = () => {
 
   const [coordinates, setCoordinates] = useState<locationCoords>(null)
-  const [data, setData] = useState(null)
+  const [data, setData] = useState<null | IData>(null)
   const [dates, setDates] = useState<null | string[]>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [isError, setIsError] = useState(false)
@@ -46,7 +52,7 @@ export const Weather = () => {
     if (coordinates) {
       setIsLoading(true)
       fetchWeather({...coordinates})
-        .then(data => {
+        .then((data:IData) => {
           setData(data)
           setDates(() => ([...data.hourly.time.map(date => moment(date).format("DD.MM HH:mm"))]))
           console.debug(data)
