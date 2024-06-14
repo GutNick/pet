@@ -3,10 +3,13 @@ import {Line} from 'react-chartjs-2';
 import {CategoryScale, Chart, LinearScale, PointElement, LineElement, Tooltip} from "chart.js";
 import {getCurrentPosition} from "@/widgets/Weather/lib";
 import {useEffect, useState} from "react";
-import {fetchWeather} from "@/widgets/Weather/api";
 import moment from "moment";
 
 export type locationCoords = { latitude: number | undefined; longitude: number | undefined } | null;
+type responseData = {
+  data: IData
+}
+
 interface IData {
   hourly: {
     time: Date[],
@@ -23,6 +26,8 @@ export const Weather = () => {
   const [dates, setDates] = useState<null | string[]>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [isError, setIsError] = useState(false)
+  const [todayDate, setTodayDate] = useState<null | string>(null)
+  const [walkHoursTempr, setWalkHoursTempr] = useState<null | (number | undefined)[]>(null)
 
   const setCoords = (coords: locationCoords) => setCoordinates({
     latitude: coords?.latitude,
@@ -44,18 +49,25 @@ export const Weather = () => {
 
   useEffect(() => {
     getCurrentPosition(setCoords)
-    const a = moment("2016-11-09T22:23:27.861")
-    console.debug(a.format())
+    setTodayDate(new Date().toISOString())
   }, []);
 
   useEffect(() => {
     if (coordinates) {
       setIsLoading(true)
-      fetchWeather({...coordinates})
-        .then((data:IData) => {
+      fetch('/weather-api', {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(coordinates)
+      })
+        .then((res) => {
+          return res.json()
+        })
+        .then(({data}: responseData) => {
           setData(data)
           setDates(() => ([...data.hourly.time.map(date => moment(date).format("DD.MM HH:mm"))]))
-          console.debug(data)
         })
         .catch((e) => {
           console.error(e)
@@ -66,14 +78,33 @@ export const Weather = () => {
 
   }, [coordinates]);
 
+  const handleClothesSelect = () => {
+    const hourIndex = dates?.findIndex(item => item === String(moment(todayDate).format("DD.MM HH:00")))
+    if (hourIndex && hourIndex !== -1) {
+      const temps = []
+      for (let i = hourIndex; i < hourIndex + 3; i++) {
+        temps.push(data?.hourly.temperature_2m[i])
+      }
+      setWalkHoursTempr(temps)
+    }
+  }
+
   return (
     <section style={{width: "100%", height: "300px"}}>
       <h1>Weather</h1>
+      <p>Today is {moment(todayDate).format("DD MMMM")}</p>
+      <button onClick={handleClothesSelect} disabled={isLoading || isError || !data}>What to wear child</button>
+      {
+        Array.isArray(walkHoursTempr) ?
+          <p>Temperature for 2 hours
+            from {walkHoursTempr[0]}°C to {walkHoursTempr[2]}°C</p> :
+          ""
+      }
       {renderWeatherResponse()}
       {data &&
         <>
           <h2>Temperature</h2>
-          <p>Low {Math.min( ...data.hourly.temperature_2m )}°C, High {Math.max( ...data.hourly.temperature_2m )}°C</p>
+          <p>Low {Math.min(...data.hourly.temperature_2m)}°C, High {Math.max(...data.hourly.temperature_2m)}°C</p>
           <Line
             data={{
               labels: dates || [],
@@ -86,7 +117,6 @@ export const Weather = () => {
             }}
             options={{
               backgroundColor: '#F60018',
-              // borderColor: "#F60018",
               responsive: true,
             }}
             plugins={[Tooltip]}
