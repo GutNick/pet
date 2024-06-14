@@ -28,6 +28,7 @@ export const Weather = () => {
   const [isError, setIsError] = useState(false)
   const [todayDate, setTodayDate] = useState<null | string>(null)
   const [walkHoursTempr, setWalkHoursTempr] = useState<null | (number | undefined)[]>(null)
+  const [widgetHeight, setWidgetHeight] = useState(10)
 
   const setCoords = (coords: locationCoords) => setCoordinates({
     latitude: coords?.latitude,
@@ -50,6 +51,7 @@ export const Weather = () => {
   useEffect(() => {
     getCurrentPosition(setCoords)
     setTodayDate(new Date().toISOString())
+    resize()
   }, []);
 
   useEffect(() => {
@@ -78,6 +80,14 @@ export const Weather = () => {
 
   }, [coordinates]);
 
+  const resize = () => {
+    if (window.innerWidth > 760) {
+      setWidgetHeight(10)
+    } else {
+      setWidgetHeight(100)
+    }
+  }
+
   const handleClothesSelect = () => {
     const hourIndex = dates?.findIndex(item => item === String(moment(todayDate).format("DD.MM HH:00")))
     if (hourIndex && hourIndex !== -1) {
@@ -105,25 +115,25 @@ export const Weather = () => {
         <>
           <h2>Temperature</h2>
           <p>Low {Math.min(...data.hourly.temperature_2m)}°C, High {Math.max(...data.hourly.temperature_2m)}°C</p>
-          <Line
-            data={{
-              labels: dates || [],
-              datasets: [
-                {
-                  label: "",
-                  data: data.hourly.temperature_2m,
-                },
-              ],
-            }}
-            options={{
-              backgroundColor: '#F60018',
-              responsive: true,
-            }}
-            plugins={[Tooltip]}
-            width={"100vw"}
-            height={10}
+            <Line
+              data={{
+                labels: dates || [],
+                datasets: [
+                  {
+                    label: "",
+                    data: data.hourly.temperature_2m,
+                  },
+                ],
+              }}
+              options={{
+                backgroundColor: '#F60018',
+                responsive: true,
+              }}
+              plugins={[Tooltip]}
+              width={"100vw"}
+              height={widgetHeight}
 
-          />
+            />
         </>
       }
     </section>
