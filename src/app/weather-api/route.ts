@@ -1,7 +1,7 @@
 export async function POST(request: Request) {
   const { latitude, longitude } = await request.json()
   if (latitude && longitude) {
-    const res = await fetch(`${process.env.BASE_URL_METEO}?latitude=${latitude.toFixed(2)}&longitude=${longitude.toFixed(2)}&hourly=temperature_2m&forecast_days=1`, {
+    const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude.toFixed(2)}&longitude=${longitude.toFixed(2)}&hourly=temperature_2m&forecast_days=1`, {
       headers: {
         'Content-Type': 'application/json',
       },
