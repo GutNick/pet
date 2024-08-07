@@ -1,4 +1,4 @@
-import {Weather} from "@/widgets/Weather/ui/Weather";
+import {Weather} from "@/widgets/Weather";
 
 export default async function Page() {
   return (

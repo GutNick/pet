@@ -1,9 +1,13 @@
 'use client'
-import {Line} from 'react-chartjs-2';
-import {CategoryScale, Chart, LinearScale, PointElement, LineElement, Tooltip} from "chart.js";
 import {getCurrentPosition} from "@/widgets/Weather/lib";
 import {useEffect, useState} from "react";
 import moment from "moment";
+import { Line, ReferenceLine } from 'recharts';
+import {Chart} from "@/entities/Chart";
+import {getWeatherData} from "@/widgets/Weather/api";
+import {useCN} from "@/shared/utils/hooks/useCN";
+import "./styles.scss"
+
 
 export type locationCoords = { latitude: number | undefined; longitude: number | undefined } | null;
 type responseData = {
@@ -17,7 +21,13 @@ interface IData {
   }
 }
 
-Chart.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip);
+const CustomizedLabel = ({ x, y, value }: {x?: number, y?: number, value?: string}) => {
+    return (
+      <text x={x} y={y} dy={-14} fill={"red"} fontSize={14} textAnchor="middle">
+        {value}
+      </text>
+    );
+}
 
 export const Weather = () => {
 
@@ -27,8 +37,8 @@ export const Weather = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [isError, setIsError] = useState(false)
   const [todayDate, setTodayDate] = useState<null | string>(null)
-  const [walkHoursTempr, setWalkHoursTempr] = useState<null | (number | undefined)[]>(null)
-  const [widgetHeight, setWidgetHeight] = useState(10)
+  const [walkHoursTemperature, setWalkHoursTemperature] = useState<null | (number | undefined)[]>(null)
+  const [chartData, setChartData] = useState<null | { name: string; Temperature: number; }[]>(null)
 
   const setCoords = (coords: locationCoords) => setCoordinates({
     latitude: coords?.latitude,
@@ -48,26 +58,43 @@ export const Weather = () => {
     }
   }
 
+  const combineHourlyData = (data: IData) => {
+    const times = data.hourly.time;
+    const temperatures = data.hourly.temperature_2m;
+
+    return times.map((time, index) => ({
+      name: moment(time).format("HH:mm"),
+      Temperature: temperatures[index]
+    }));
+  }
+
+  const handleClothesSelect = () => {
+    const hourIndex = dates?.findIndex(item => item === String(moment(todayDate).format("DD.MM HH:00")))
+    if (hourIndex && hourIndex !== -1) {
+      const temps = []
+      for (let i = hourIndex; i < hourIndex + 3; i++) {
+        temps.push(data?.hourly.temperature_2m[i])
+      }
+      setWalkHoursTemperature(temps)
+    }
+  }
+
+  const getCN = useCN("Weather")
+
   useEffect(() => {
     getCurrentPosition(setCoords)
     setTodayDate(new Date().toISOString())
-    resize()
   }, []);
 
   useEffect(() => {
     if (coordinates) {
       setIsLoading(true)
-      fetch('/weather-api', {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(coordinates)
-      })
+      getWeatherData(coordinates)
         .then((res) => {
           return res.json()
         })
         .then(({data}: responseData) => {
+          setChartData(combineHourlyData(data))
           setData(data)
           setDates(() => ([...data.hourly.time.map(date => moment(date).format("DD.MM HH:mm"))]))
         })
@@ -80,34 +107,15 @@ export const Weather = () => {
 
   }, [coordinates]);
 
-  const resize = () => {
-    if (window.innerWidth > 760) {
-      setWidgetHeight(10)
-    } else {
-      setWidgetHeight(100)
-    }
-  }
-
-  const handleClothesSelect = () => {
-    const hourIndex = dates?.findIndex(item => item === String(moment(todayDate).format("DD.MM HH:00")))
-    if (hourIndex && hourIndex !== -1) {
-      const temps = []
-      for (let i = hourIndex; i < hourIndex + 3; i++) {
-        temps.push(data?.hourly.temperature_2m[i])
-      }
-      setWalkHoursTempr(temps)
-    }
-  }
-
   return (
-    <section style={{width: "100%", height: "300px"}}>
+    <section className={getCN()}>
       <h1>Weather</h1>
       <p>Today is {moment(todayDate).format("DD MMMM")}</p>
       <button onClick={handleClothesSelect} disabled={isLoading || isError || !data}>What to wear child</button>
       {
-        Array.isArray(walkHoursTempr) ?
+        Array.isArray(walkHoursTemperature) ?
           <p>Temperature for 2 hours
-            from {walkHoursTempr[0]}°C to {walkHoursTempr[2]}°C</p> :
+            from {walkHoursTemperature[0]}°C to {walkHoursTemperature[2]}°C</p> :
           ""
       }
       {renderWeatherResponse()}
@@ -115,26 +123,13 @@ export const Weather = () => {
         <>
           <h2>Temperature</h2>
           <p>Low {Math.min(...data.hourly.temperature_2m)}°C, High {Math.max(...data.hourly.temperature_2m)}°C</p>
-            <Line
-              data={{
-                labels: dates || [],
-                datasets: [
-                  {
-                    label: "",
-                    data: data.hourly.temperature_2m,
-                  },
-                ],
-              }}
-              options={{
-                backgroundColor: '#F60018',
-                responsive: true,
-              }}
-              plugins={[Tooltip]}
-              width={"100vw"}
-              height={widgetHeight}
-
-            />
         </>
+      }
+      {
+        !!chartData && <Chart data={chartData} >
+          <ReferenceLine x={moment().format("HH:00")} stroke="red" label="Now" />
+          <Line type="monotone" dataKey="Temperature" stroke="#8884d8" label={<CustomizedLabel />}/>
+        </Chart>
       }
     </section>
   )

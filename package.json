@@ -14,8 +14,8 @@
     "next": "14.2.3",
     "normalize.css": "^8.0.1",
     "react": "^18",
-    "react-chartjs-2": "^5.2.0",
-    "react-dom": "^18"
+    "react-dom": "^18",
+    "recharts": "^2.13.0-alpha.4"
   },
   "devDependencies": {
     "@types/node": "^20",
